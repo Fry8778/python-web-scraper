@@ -21,7 +21,7 @@ def extract_value(value_str):
 # Функція для отримання даних через API
 def fetch_product_data_api(category, offset=0):
     url = f"https://sf-ecom-api.silpo.ua/v1/uk/branches/1edb732e-e075-661c-a325-198a97b604e9/products?limit=47&offset={offset}&deliveryType=SelfPickup&category={category}&includeChildCategories=true&sortBy=popularity&sortDirection=desc"
-    # url = f"https://sf-ecom-api.silpo.ua/v1/uk/branches/1edb732e-e075-661c-a325-198a97b604e9/products?limit=47&offset={offset}0&deliveryType=SelfPickup&category={category}&includeChildCategories=true&sortBy=popularity&sortDirection=desc"
+    # url = f"https://sf-ecom-api.silpo.ua/v1/uk/branches/1edb732e-e075-661c-a325-198a97b604e9/products?limit=47&offset={offset}&deliveryType=SelfPickup&category={category}&includeChildCategories=true&sortBy=popularity&sortDirection=desc"
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -52,7 +52,7 @@ def save_to_excel(data, filename='silpo_products.xlsx'):
 # Основний код для переходу між сторінками
 def fetch_and_save_data_api(category, filename='silpo_products_api.xlsx'):
     offset = 0
-    quotes = []
+    product_list = []
     while True:
         products = fetch_product_data_api(category, offset)
         if not products:
@@ -87,15 +87,15 @@ def fetch_and_save_data_api(category, filename='silpo_products_api.xlsx'):
                 discount_str = ''
 
             # Додаємо дані в список
-            quotes.append([product_name, price, weight, old_price, discount_str])
-            print(f"Додано: {product_name}, Ціна: {price}, Вага: {weight}, Знижка: {discount_str}")
+            product_list.append([product_name, price, weight, old_price, discount_str])
+            print(f"Додано: {product_name}, Ціна: {price}, Вага: {weight}, Відсоток знижки: {discount_str}")
 
         # Переходимо до наступної сторінки
         offset += 47  # Інкрементуємо offset для наступної сторінки
         if len(products) < 47:
             break  # Якщо отримано менше елементів, ніж limit, значить це остання сторінка
 
-    save_to_excel(quotes, filename)
+    save_to_excel(product_list, filename)
 
 # Виклик функції
 fetch_and_save_data_api('kava-v-zernakh-5111')
