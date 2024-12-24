@@ -81,7 +81,13 @@ def scrape_page(driver, quotes):
                         except ValueError:
                             print(f"[ЛОГ] Помилка при перерахунку знижки для {product_name}")
 
-                    quotes.append([product_name, price, weight, special_price, sale_price, discount])
+                    quotes.append([product_name,
+                                   price,
+                                   weight,
+                                   special_price,
+                                   sale_price,
+                                   discount
+                    ])
                     print(f"[ЛОГ] Додано: {product_name}, Ціна: {price}")
                     break
 
