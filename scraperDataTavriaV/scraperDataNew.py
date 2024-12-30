@@ -7,15 +7,6 @@ import pandas as pd
 import time
 import random
 
-# Перевірка на дублікати
-unique_products = set()
-
-def is_duplicate(product_name):
-    if product_name in unique_products:
-        return True
-    unique_products.add(product_name)
-    return False
-
 # Функція для збору даних з поточної сторінки
 def scrape_page(driver, quotes):
     try:
@@ -43,10 +34,6 @@ def scrape_page(driver, quotes):
                 # Назва продукту
                 product_name_element = general_content.find_element(By.CSS_SELECTOR, ".prod__name")
                 product_name = product_name_element.text.strip()
-
-                if is_duplicate(product_name):
-                    print(f"[ЛОГ] Дублікат пропущено: {product_name}")
-                    continue  # Пропускаємо цей товар, якщо він вже був
 
                 # Перевірка на наявність товару через кнопку "Немає в наявності"
                 out_of_stock_button = product_card.find_elements(By.CSS_SELECTOR, ".ant-btn.css-m54yah.ant-btn-disabled.ant-btn-block.add__remove__product.type-disabled")
@@ -104,8 +91,8 @@ def scrape_page(driver, quotes):
 
     return quotes
 
-# Функція для прокручування сторінки
-def scroll_down(driver):
+# Функція для прокручування сторінки до кінця
+def scroll_to_end(driver):
     scroll_pause_time = random.uniform(3, 7)
     current_height = driver.execute_script("return document.body.scrollHeight")
     while True:
@@ -126,23 +113,18 @@ options.add_argument('--disable-dev-shm-usage')
 with webdriver.Chrome(options=options) as driver:
     driver.get(base_url)
     quotes = []
-    previous_count = 0
-    while True:
-        print("[ЛОГ] Скролінг сторінки.")
-        scroll_down(driver)
-        quotes = scrape_page(driver, quotes)
 
-        # Гнучка перевірка: зупинка якщо кількість знайдених товарів не змінюється
-        if len(quotes) == previous_count:
-            print("[ЛОГ] Здається, більше товарів немає.")
-            break
-        previous_count = len(quotes)
+    print("[ЛОГ] Скролінг сторінки до кінця.")
+    scroll_to_end(driver)
+
+    print("[ЛОГ] Збирання товарів зі сторінки.")
+    quotes = scrape_page(driver, quotes)
 
     if quotes:
         header = ['Назва товару', 'Ціна товару(грн)', 'Ціна товару з урахуванням знижки(грн)', 'Стара ціна товару(грн)', 'Знижка(грн)']
         quotes.sort(key=lambda x: x[0])
         df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('tavria_v_all_products.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'tavria_v_all_products.xlsx'")
+        df.to_excel('scraper_data_new.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'scraper_data_new.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")

@@ -161,7 +161,7 @@ with webdriver.Chrome(options=options) as driver:
         header = ['Назва товару', 'Ціна товару(грн)', 'Ціна товару з урахуванням знижки(грн)', 'Стара ціна товару(грн)', 'Знижка(грн)']
         quotes.sort(key=lambda x: x[0])
         df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('tavria_v_all_products.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'tavria_v_all_products.xlsx'")
+        df.to_excel('scraper_data.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'scraper_data.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")
