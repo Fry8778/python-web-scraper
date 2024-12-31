@@ -11,7 +11,7 @@ import random
 def scrape_page(driver, quotes):
     try:
         # Очікування появи карток продуктів
-        WebDriverWait(driver, 20).until(
+        WebDriverWait(driver, 50).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".styles__StyledCard-sc-3jvmda-0.LSTlO"))
         )
         # Пошук всіх карток продуктів
@@ -44,7 +44,7 @@ def scrape_page(driver, quotes):
                 # Ціна товару
                 price_element = general_content.find_element(By.CSS_SELECTOR, ".base__price")
                 price = price_element.text.strip().replace("₴", "").replace(",", ".") if price_element else ""
-
+                
                 # Стара ціна
                 old_price_element = general_content.find_elements(By.CSS_SELECTOR, ".prod-crossed-out__price__old")
                 old_price = (
@@ -93,7 +93,7 @@ def scrape_page(driver, quotes):
 
 # Функція для прокручування сторінки до кінця
 def scroll_to_end(driver):
-    scroll_pause_time = random.uniform(3, 7)
+    scroll_pause_time = random.uniform(5, 10)
     current_height = driver.execute_script("return document.body.scrollHeight")
     while True:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -105,7 +105,9 @@ def scroll_to_end(driver):
 
 # Основний код
 base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D0%B8-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/%D0%BA%D0%B0%D0%B2%D0%BE%D0%B2%D1%96-%D0%BD%D0%B0%D0%BF%D0%BE%D1%96/9829/9830'
+# base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D0%B8-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/9829'
 options = webdriver.ChromeOptions()
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
