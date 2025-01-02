@@ -7,13 +7,18 @@ import pandas as pd
 import time
 import random
 
-# Функція для збору даних з поточної сторінки
+# Функція для збору даних з поточної сторінки  
 def scrape_page(driver, quotes):
     try:
         # Очікування появи карток продуктів
-        WebDriverWait(driver, 50).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".styles__StyledCard-sc-3jvmda-0.LSTlO"))
-        )
+        try:
+            WebDriverWait(driver, 25).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".styles__StyledCard-sc-3jvmda-0.LSTlO"))
+            )
+        except TimeoutException:
+            print("[ЛОГ] Час очікування вичерпано, картки продуктів не з'явились.")
+            return quotes  # Якщо не вдалося знайти продукти за 50 секунд, виходимо з функції
+
         # Пошук всіх карток продуктів
         product_cards = driver.find_elements(By.CSS_SELECTOR, ".styles__StyledCard-sc-3jvmda-0.LSTlO")
         if not product_cards:
@@ -68,8 +73,11 @@ def scrape_page(driver, quotes):
                     special_price = ""
                     regular_price = price
 
+                # Логування зібраних даних
+                print(f"[ЛОГ] Назва: {product_name}, Ціна: {price}, Знижка: {discount_amount}")
+
                 # Додавання в таблицю
-                quotes.append([
+                quotes.append([ 
                     product_name,
                     f"{regular_price} грн" if regular_price else "",
                     f"{special_price} грн" if special_price else "",
@@ -104,8 +112,7 @@ def scroll_to_end(driver):
         current_height = new_height
 
 # Основний код
-base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D0%B8-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/%D0%BA%D0%B0%D0%B2%D0%BE%D0%B2%D1%96-%D0%BD%D0%B0%D0%BF%D0%BE%D1%96/9829/9830'
-# base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D0%B8-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/9829'
+base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D1%97-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/%D0%BA%D0%B0%D0%B2%D0%BE%D0%B2%D1%96-%D0%BD%D0%B0%D0%BF%D0%BE%D1%97/9829/9830'
 options = webdriver.ChromeOptions()
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 options.add_argument('--headless')
@@ -118,6 +125,10 @@ with webdriver.Chrome(options=options) as driver:
 
     print("[ЛОГ] Скролінг сторінки до кінця.")
     scroll_to_end(driver)
+
+    # Збереження HTML сторінки для діагностики
+    with open("page_source.html", "w", encoding="utf-8") as file:
+        file.write(driver.page_source)
 
     print("[ЛОГ] Збирання товарів зі сторінки.")
     quotes = scrape_page(driver, quotes)
