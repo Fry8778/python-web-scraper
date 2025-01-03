@@ -127,8 +127,8 @@ with webdriver.Chrome(options=options) as driver:
     scroll_to_end(driver)
 
     # Збереження HTML сторінки для діагностики
-    with open("page_source.html", "w", encoding="utf-8") as file:
-        file.write(driver.page_source)
+    # with open("page_source.html", "w", encoding="utf-8") as file:
+    #     file.write(driver.page_source)
 
     print("[ЛОГ] Збирання товарів зі сторінки.")
     quotes = scrape_page(driver, quotes)
