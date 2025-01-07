@@ -45,41 +45,25 @@ def scrape_page(driver, product_data):
                 # Знаходимо основну ціну
                 try:
                     price_element = general_content.find_element(By.CSS_SELECTOR, ".CardBasePrice__CardBasePriceStyles-sc-1dlx87w-0.bhSKFL")
-                    price = price_element.text.strip().replace("₴", "").replace(",", ".")
+                    price = price_element.text.strip()
                 except Exception:
                     price_element = general_content.find_element(By.CSS_SELECTOR, ".base__price")
-                    price = price_element.text.strip().replace("₴", "").replace(",", ".") if price_element else ""
+                    price = price_element.text.strip() if price_element else ""
 
                 # Знаходимо стару ціну
                 old_price_element = general_content.find_elements(By.CSS_SELECTOR, ".prod-crossed-out__price__old")
                 old_price = (
-                    old_price_element[0].text.strip().replace("₴", "").replace(",", ".")
-                    if old_price_element
-                    else ""
+                    old_price_element[0].text.strip() if old_price_element else ""
                 )
 
                 # Знаходимо економію
                 discount_text_element = general_content.find_elements(By.CSS_SELECTOR, ".prod-crossed-out__price__special-off")
                 discount_text = discount_text_element[0].text.strip() if discount_text_element else ""
-                discount_amount = discount_text.replace("Економія", "").replace("₴", "").replace(",", ".").strip() if discount_text else ""
 
-                # Розрахунок цін
-                special_price, regular_price = "", ""
-                if discount_amount and old_price:
-                    special_price = str(round(float(old_price) - float(discount_amount), 2))
-                    regular_price = old_price
-                elif not discount_amount:
-                    special_price = ""
-                    regular_price = price
-                else:
-                    special_price = price
-                    regular_price = ""
-
-                # Перевірка на відповідність даних
-                if special_price and old_price and discount_amount:
-                    calculated_discount = str(round(float(old_price) - float(special_price), 2))
-                    if calculated_discount != discount_amount:
-                        print(f"[ЛОГ] Невідповідність даних для {product_name}: Обчислена економія {calculated_discount} ≠ Знайдена економія {discount_amount}")
+                # Очищення даних від небажаних символів
+                price = price.replace("₴", "").replace(",", ".").replace("(", "").replace(")", "").strip()
+                old_price = old_price.replace("₴", "").replace(",", ".").replace("(", "").replace(")", "").strip()
+                discount_amount = discount_text.replace("Економія", "").replace("₴", "").replace(",", ".").replace("(", "").replace(")", "").strip()
 
                 # Логування зібраних даних
                 print(f"[ЛОГ] Назва: {product_name}, Ціна: {price}, Стара ціна: {old_price}, Економія: {discount_amount}")
@@ -87,8 +71,7 @@ def scrape_page(driver, product_data):
                 # Додавання в таблицю
                 product_data.append([
                     product_name,
-                    f"{regular_price} грн" if regular_price else "",
-                    f"{special_price} грн" if special_price else "",
+                    f"{price} грн" if price else "",
                     f"{old_price} грн" if old_price else "",
                     f"{discount_amount} грн" if discount_amount else ""
                 ])
@@ -119,7 +102,7 @@ def scroll_to_end(driver):
         current_height = new_height
 
 # Основний код
-base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D1%97-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/%D0%BA%D0%B0%D0%B2%D0%BE%D0%B2%D1%96-%D0%BD%D0%B0%D0%BF%D0%BE%D1%97/9829/9830'
+base_url = 'https://www.tavriav.ua/ca/%D1%87%D0%B0%D0%B8-%D0%BA%D0%B0%D0%B2%D0%B0-%D1%82%D0%B0-%D0%BA%D0%B0%D0%BA%D0%B0%D0%BE/%D0%BA%D0%B0%D0%B2%D0%BE%D0%B2%D1%96-%D0%BD%D0%B0%D0%BF%D0%BE%D1%96/9829/9830'
 options = webdriver.ChromeOptions()
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 options.add_argument('--headless')
@@ -137,10 +120,10 @@ with webdriver.Chrome(options=options) as driver:
     product_data = scrape_page(driver, product_data)
 
     if product_data:
-        header = ['Назва товару', 'Ціна товару(грн)', 'Ціна товару з урахуванням знижки(грн)', 'Стара ціна товару(грн)', 'Знижка(грн)']
+        header = ['Назва товару', 'Ціна товару(грн)', 'Стара ціна товару(грн)', 'Знижка(грн)']
         product_data.sort(key=lambda x: x[0])
         df = pd.DataFrame(product_data, columns=header)
-        df.to_excel('scraper_data_price.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'scraper_data_price.xlsx'")
+        df.to_excel('scraper_data_with_JS_code.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'scraper_data_with_JS_code.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")

@@ -1,14 +1,15 @@
 import requests
 import pandas as pd
 
-# Множина для перевірки на дублікати
+# Множина для перевірки на дублікати (назва + вага + ціна)
 unique_products = set()
 
-def is_duplicate(product_name):
+def is_duplicate(product_name, weight, price):
     """Перевірка на дублікати товарів."""
-    if product_name in unique_products:
+    product_key = (product_name, weight, price)  # Унікальний ключ: назва + вага + ціна
+    if product_key in unique_products:
         return True
-    unique_products.add(product_name)
+    unique_products.add(product_key)
     return False
 
 def extract_value(value_str):
@@ -37,7 +38,7 @@ def fetch_product_data_api(category, offset=0):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='silpo_products.xlsx'):
+def save_to_excel(data, filename='silpo_kava_v_zernakh.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -48,7 +49,7 @@ def save_to_excel(data, filename='silpo_products.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(category, filename='silpo_products_Drip_Kava_5117.xlsx'):
+def fetch_and_save_data_api(category, filename='silpo_kava_v_zernakh.xlsx'):
     """Основна функція для переходу між сторінками та збору даних."""
     offset = 0
     product_list = []
@@ -65,8 +66,9 @@ def fetch_and_save_data_api(category, filename='silpo_products_Drip_Kava_5117.xl
                 continue
 
             product_name = product['title']
-            if is_duplicate(product_name):
-                continue
+
+            # Отримуємо вагу товару
+            weight = product.get('displayRatio', '')
 
             # Отримуємо ціну з урахуванням можливих значень None
             if product.get('displayOldPrice') and product.get('displayPrice'):
@@ -79,12 +81,12 @@ def fetch_and_save_data_api(category, filename='silpo_products_Drip_Kava_5117.xl
                 price_with_discount = ''
                 discount_str = ''
 
-            # Отримуємо вагу товару
-            weight_str = product.get('displayRatio', '')
-            weight = extract_value(weight_str) if weight_str else ''
-
             # Визначаємо, чи записувати ціну в колонку "Ціна товару"
             price = price_with_discount if discount_str else extract_value(str(product.get('displayPrice', 0))) + " грн"
+
+            # Перевірка на дублікати за назвою, вагою та ціною
+            if is_duplicate(product_name, weight, price):
+                continue
 
             # Додаємо дані до списку
             product_list.append([product_name, price if not discount_str else '', weight, price_with_discount, old_price, discount_str])
@@ -98,4 +100,4 @@ def fetch_and_save_data_api(category, filename='silpo_products_Drip_Kava_5117.xl
     save_to_excel(product_list, filename)
 
 # Виклик функції
-fetch_and_save_data_api('drip-kava-5117')
+fetch_and_save_data_api('kava-v-zernakh-5111')

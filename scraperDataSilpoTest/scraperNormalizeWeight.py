@@ -1,15 +1,32 @@
 import requests
 import pandas as pd
+import re
 
-# Множина для перевірки на дублікати
+# Множина для перевірки на дублікати (назва + вага + ціна)
 unique_products = set()
 
-def is_duplicate(product_name):
+def is_duplicate(product_name, weight, price):
     """Перевірка на дублікати товарів."""
-    if product_name in unique_products:
+    product_key = (product_name, weight, price)  # Унікальний ключ: назва + вага + ціна
+    if product_key in unique_products:
         return True
-    unique_products.add(product_name)
+    unique_products.add(product_key)
     return False
+
+def normalize_weight(weight_str):
+    """Нормалізація ваги до єдиного формату (число в грамах)."""
+    if not weight_str:
+        return ''
+    # Видаляємо пробіли та перетворюємо одиниці вимірювання
+    weight_str = weight_str.replace(' ', '').lower()
+    match = re.match(r'(\d+\.?\d*)(кг|г)?', weight_str)
+    if match:
+        weight, unit = match.groups()
+        weight = float(weight)
+        if unit == 'кг':  # Якщо одиниця вимірювання "кг", переводимо в грами
+            weight *= 1000
+        return f"{weight:.0f}"  # Повертаємо вагу в грамах як ціле число
+    return weight_str  # Якщо не вдалось нормалізувати, повертаємо оригінальний рядок
 
 def extract_value(value_str):
     """Функція для витягування числових значень з форматуванням до двох знаків після коми."""
@@ -48,7 +65,7 @@ def save_to_excel(data, filename='silpo_products.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(category, filename='silpo_products_Kava_Melena_5114.xlsx'):
+def fetch_and_save_data_api(category, filename='silpo_products.xlsx'):
     """Основна функція для переходу між сторінками та збору даних."""
     offset = 0
     product_list = []
@@ -65,8 +82,10 @@ def fetch_and_save_data_api(category, filename='silpo_products_Kava_Melena_5114.
                 continue
 
             product_name = product['title']
-            if is_duplicate(product_name):
-                continue
+
+            # Отримуємо вагу товару
+            weight_str = product.get('displayRatio', '')
+            weight = normalize_weight(weight_str)
 
             # Отримуємо ціну з урахуванням можливих значень None
             if product.get('displayOldPrice') and product.get('displayPrice'):
@@ -79,12 +98,12 @@ def fetch_and_save_data_api(category, filename='silpo_products_Kava_Melena_5114.
                 price_with_discount = ''
                 discount_str = ''
 
-            # Отримуємо вагу товару
-            weight_str = product.get('displayRatio', '')
-            weight = extract_value(weight_str) if weight_str else ''
-
             # Визначаємо, чи записувати ціну в колонку "Ціна товару"
             price = price_with_discount if discount_str else extract_value(str(product.get('displayPrice', 0))) + " грн"
+
+            # Перевірка на дублікати за назвою, вагою та ціною
+            if is_duplicate(product_name, weight, price):
+                continue
 
             # Додаємо дані до списку
             product_list.append([product_name, price if not discount_str else '', weight, price_with_discount, old_price, discount_str])
