@@ -89,7 +89,12 @@ def fetch_and_save_data_api(category, filename='silpo_kava_drip.xlsx'):
                 continue
 
             # Додаємо дані до списку
-            product_list.append([product_name, price if not discount_str else '', weight, price_with_discount, old_price, discount_str])
+            product_list.append([product_name,
+                                 price if not discount_str else '',
+                                 weight,
+                                 price_with_discount,
+                                 old_price,
+                                 discount_str])
             print(f"Додано: {product_name}, Ціна: {price}, Вага: {weight}, Відсоток знижки: {discount_str}")
 
         # Переходимо до наступної сторінки
