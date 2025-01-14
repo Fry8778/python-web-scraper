@@ -90,10 +90,14 @@ def fetch_and_save_data_api(category, filename='varus_products7.xlsx'):
                 price_with_discount += " грн"  # Додаємо "грн" до ціни зі знижкою
 
             # Перевірка на наявність товару
-            if not product.get('sqpp_data_9', {}).get('in_stock', False):
+            # if not product.get('sqpp_data_9', {}).get('in_stock', False):
+            #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}")
+            #     continue
+
+            if product.get('sqpp_data_9', {}).get('in_stock', 0) == 0:
                 print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}")
                 continue
-
+            
             # Логування інформації про товар
             print(f"[ЛОГ] Назва: {product_name}, Ціна: {price}, Знижка: {discount}%, Ціна зі знижкою: {price_with_discount}, Кількість на складі: {stock_qty}, Вага: {weight}")
             
