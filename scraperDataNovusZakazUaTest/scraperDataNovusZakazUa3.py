@@ -12,12 +12,6 @@ def is_duplicate(product_name, weight, price):
     unique_products.add(product_key)
     return False
 
-# def matches_filter(product_name):
-#     """Перевірка, чи назва продукту відповідає фільтру."""
-#     keywords = ["кава зернова", "кава в зернах"]
-#     return any(keyword.lower() in product_name.lower() for keyword in keywords)
-
-  
 def extract_value(value, unit=""):
     """Перетворює числове значення у відформатований текст з одиницею."""
     try:
@@ -30,11 +24,9 @@ def extract_value(value, unit=""):
     except (ValueError, TypeError):
         return str(value).strip()
 
-    
-
-def fetch_product_data_api(offset=0, limit=30):
+def fetch_product_data_api(page=1, limit=30):
     """Функція для отримання даних через API Novus."""
-    url = "https://stores-api.zakaz.ua/stores/48201031/categories/coffee-bean/products/"
+    url = "https://stores-api.zakaz.ua/stores/48201031/categories/coffee-ground/products/"
     headers = {
         "Accept": "*/*",
         "Accept-Language": "uk",
@@ -47,8 +39,7 @@ def fetch_product_data_api(offset=0, limit=30):
     }
     params = {
         "limit": limit,
-        "offset": offset,
-        
+        "page": page,  # Використання сторінки замість offset
     }
     try:
         response = requests.get(url, headers=headers, params=params)
@@ -60,9 +51,8 @@ def fetch_product_data_api(offset=0, limit=30):
     except requests.RequestException as e:
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return {}
-    
 
-def save_to_excel(data, filename='scraper_novus_kava_v_zernakh1.xlsx'):
+def save_to_excel(data, filename='scraper_novus_kava_v_zernakh3.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -73,14 +63,14 @@ def save_to_excel(data, filename='scraper_novus_kava_v_zernakh1.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh1.xlsx', limit=30):
+def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh3.xlsx', limit=30):
     """Основна функція для збору даних і збереження у файл."""
-    offset = 0
+    page = 1
     product_list = []
     total_count = None  # Загальна кількість товарів
 
     while True:
-        data = fetch_product_data_api(offset, limit)
+        data = fetch_product_data_api(page, limit)
         if not data:
             print("[ЛОГ] Дані не знайдено або помилка при завантаженні.")
             break
@@ -90,27 +80,34 @@ def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh1.xlsx', limit
             print(f"[ЛОГ] Загальна кількість товарів: {total_count}")
 
         products = data.get("results", [])
-        print(f"[ЛОГ] Отримано {len(products)} товарів з offset={offset}")
+        print(f"[ЛОГ] Отримано {len(products)} товарів на сторінці {page}")
         if not products:
             break
 
         for product in products:
+            # Отримуємо назву товару
             product_name = product.get('title', '').strip()
-            price = extract_value(product.get('price'))
-            old_price = product.get('discount', {}).get('old_price')
-            discount = product.get('discount', {}).get('value', '')
+            # Отримуємо вагу товару
             weight = extract_value(product.get('weight', ''), unit="г")           
-            price_with_discount = (
-                extract_value(old_price) if old_price else ""
-            )
-
-            # Фільтрація за ключовими словами
-            # if not matches_filter(product_name):
-            #     print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
-            #     continue
-
+            if product.get('old_price') and product.get('price'):                
+                old_price = product.get('discount', {}).get('old_price')
+                price_with_discount = (extract_value('price') if 'price' else "")
+                discount = f"-{product.get('discount', {}).get('value', '')} %"
+            else:
+                old_price = ''
+                price_with_discount = ''
+                discount = ''             
+                           
+            # Визначаємо, чи записувати ціну в колонку "Ціна товару"
+            price = price_with_discount if discount else extract_value(product.get('price', 0))
+            
             # Логування інформації про товар
             print(f"[ЛОГ] Додано товар: Назва: {product_name}, Ціна: {price}, Знижка: {discount}%, Ціна зі знижкою: {price_with_discount}, Вага: {weight}")
+
+            # Перевірка наявності товару            
+            if product.get('in_stock', 0) == 0:
+                print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}")
+                continue
 
             # Перевірка на дублікати
             if is_duplicate(product_name, weight, price):
@@ -119,18 +116,19 @@ def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh1.xlsx', limit
 
             # Додаємо дані до списку
             product_list.append([
-                product_name,
-                price if not discount else '',
-                weight,
-                price_with_discount,
-                 extract_value(old_price) if old_price else '',
-                f"{discount}%" if discount else ''
-            ])
+                                product_name,
+                                price if not discount else '',
+                                weight,
+                                price_with_discount,
+                                old_price,
+                                discount])
+            
 
-        offset += limit
-        if offset >= total_count:
-            print("[ЛОГ] Завантажено всі товари.")
+        if len(products) < limit:
+            print("[ЛОГ] Завантажено останню сторінку.")
             break
+
+        page += 1  # Переходимо на наступну сторінку
 
     save_to_excel(product_list, filename)
 

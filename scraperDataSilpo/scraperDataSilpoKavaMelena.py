@@ -66,10 +66,8 @@ def fetch_and_save_data_api(category, filename='silpo_kava_melena.xlsx'):
                 continue
 
             product_name = product['title']
-
             # Отримуємо вагу товару
             weight = product.get('displayRatio', '')
-
             # Отримуємо ціну з урахуванням можливих значень None
             if product.get('displayOldPrice') and product.get('displayPrice'):
                 old_price = extract_value(str(product['displayOldPrice'])) + " грн"
@@ -89,7 +87,13 @@ def fetch_and_save_data_api(category, filename='silpo_kava_melena.xlsx'):
                 continue
 
             # Додаємо дані до списку
-            product_list.append([product_name, price if not discount_str else '', weight, price_with_discount, old_price, discount_str])
+            product_list.append([
+                                 product_name,
+                                 price if not discount_str else '',
+                                 weight,
+                                 price_with_discount,
+                                 old_price,
+                                 discount_str])
             print(f"Додано: {product_name}, Ціна: {price}, Вага: {weight}, Відсоток знижки: {discount_str}")
 
         # Переходимо до наступної сторінки
