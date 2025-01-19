@@ -95,7 +95,7 @@ def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh5.xlsx', limit
             if is_duplicate(product_name, weight, price):
                 continue
 
-            if old_price:  # Товар зі знижкою
+            if discount:  # Товар зі знижкою
                 product_list.append([
                     product_name,        # Назва товару
                     '',                  # Поле "Ціна товару" залишається порожнім

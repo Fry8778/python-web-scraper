@@ -26,13 +26,13 @@ def extract_value(value, unit=""):
 
 def fetch_product_data_api(page=1, limit=30):
     """Функція для отримання даних через API Novus."""
-    url = "https://stores-api.zakaz.ua/stores/48201031/categories/coffee-bean/products/"
+    url = "https://stores-api.zakaz.ua/stores/48201031/categories/drip-coffee-novus/products/"
     headers = {
         "Accept": "*/*",
         "Accept-Language": "uk",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "Origin": "https://novus.zakaz.ua",
-        "Referer": "https://novus.zakaz.ua/uk/categories/coffee-bean/",
+        "Referer": "https://novus.zakaz.ua/uk/categories/drip-coffee-novus/",
         "x-chain": "novus",
         "x-delivery-type": "pickup",
         "x-version": "63",
@@ -52,7 +52,7 @@ def fetch_product_data_api(page=1, limit=30):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return {}
 
-def save_to_excel(data, filename='scraper_novus_kava_v_zernakh4.xlsx'):
+def save_to_excel(data, filename='novus_kava_drip.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -63,7 +63,7 @@ def save_to_excel(data, filename='scraper_novus_kava_v_zernakh4.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='scraper_novus_kava_v_zernakh4.xlsx', limit=30):
+def fetch_and_save_data_api(filename='novus_kava_drip.xlsx', limit=30):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
