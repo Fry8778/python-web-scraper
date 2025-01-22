@@ -12,10 +12,10 @@ def is_duplicate(product_name, weight, price):
     unique_products.add(product_key)
     return False
 
-# def matches_filter(product_name):
-#     """Перевірка, чи назва продукту відповідає фільтру."""
-#     keywords = ["мелена", "мел."]
-#     return any(keyword.lower() in product_name.lower() for keyword in keywords)
+def matches_filter(product_name):
+    """Перевірка, чи назва продукту відповідає фільтру."""
+    keywords = ["мелена", "мел."]
+    return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 def extract_value(value, unit=""):
     """Перетворює числове значення у відформатований текст з одиницею."""
@@ -43,16 +43,9 @@ def fetch_product_data_api(page=1, limit=40):
         "shop_id": 9,
         "size": limit,
         "from": (page - 1) * limit,
-        # "request": (
-        #     '{"_appliedFilters":[{"attribute":"category_ids","value":{"in":[52907]},'
-        #     '"scope":"default"},{"attribute":"sqpp_data_9.in_stock","value":{"or":true},"scope":"default"}]}'
-            
-         "request": (
-            '{"_appliedFilters":['
-            '{"attribute":"category_ids","value":{"in":[52907]},"scope":"default"},'
-            '{"attribute":"forcoffeebeans_typecoffeebeans","value":{"in":["17812"]},"scope":"catalog"},'
-            '{"attribute":"sqpp_data_9.in_stock","value":{"or":true},"scope":"default"}'
-            ']}'    
+        "request": (
+            '{"_appliedFilters":[{"attribute":"category_ids","value":{"in":[52907]},'
+            '"scope":"default"},{"attribute":"sqpp_data_9.in_stock","value":{"or":true},"scope":"default"}]}'
         ),
     }
     try:
@@ -65,7 +58,7 @@ def fetch_product_data_api(page=1, limit=40):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='varus_kava_melena_new.xlsx'):
+def save_to_excel(data, filename='varus_KM.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -76,7 +69,7 @@ def save_to_excel(data, filename='varus_kava_melena_new.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='varus_kava_melena_new.xlsx', limit=40):
+def fetch_and_save_data_api(filename='varus_KM.xlsx', limit=40):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
@@ -104,9 +97,9 @@ def fetch_and_save_data_api(filename='varus_kava_melena_new.xlsx', limit=40):
                 continue
             
             # Фільтрація за ключовими словами
-            # if not matches_filter(product_name):
-            #     print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
-            #     continue
+            if not matches_filter(product_name):
+                print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
+                continue
 
             # Логування інформації про товар
             print(f"[ЛОГ] Назва: {product_name}, Ціна: {price}, Знижка: {discount}%, "

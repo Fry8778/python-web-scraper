@@ -12,11 +12,6 @@ def is_duplicate(product_name, weight, price):
     unique_products.add(product_key)
     return False
 
-def matches_filter(product_name):
-    """Перевірка, чи назва продукту відповідає фільтру."""
-    keywords = ["зернова", "в зернах"]
-    return any(keyword.lower() in product_name.lower() for keyword in keywords)
-
 def extract_value(value, unit=""):
     """Перетворює числове значення у відформатований текст з одиницею."""
     try:
@@ -35,7 +30,7 @@ def fetch_product_data_api(page=1, limit=40):
     headers = {
         "Accept": "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Referer": "https://varus.ua/kava-zernova~typ-kavy_u-zernakh?stock_shop=in_stock",
+        "Referer": "https://varus.ua/kava-zernova~typ-kavy_u-zernakh",
     }
     params = {
         "request_format": "search-query",
@@ -44,8 +39,11 @@ def fetch_product_data_api(page=1, limit=40):
         "size": limit,
         "from": (page - 1) * limit,
         "request": (
-            '{"_appliedFilters":[{"attribute":"category_ids","value":{"in":[52907]},'
-            '"scope":"default"},{"attribute":"sqpp_data_9.in_stock","value":{"or":true},"scope":"default"}]}'
+            '{"_appliedFilters":['
+            '{"attribute":"category_ids","value":{"in":[52907]},"scope":"default"},'
+            '{"attribute":"forcoffeebeans_typecoffeebeans","value":{"in":["4663"]},"scope":"catalog"},'
+            '{"attribute":"sqpp_data_9.in_stock","value":{"or":true},"scope":"default"}'
+            ']}'    
         ),
     }
     try:
@@ -58,7 +56,7 @@ def fetch_product_data_api(page=1, limit=40):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='varus_kava_v_zernakh.xlsx'):
+def save_to_excel(data, filename='varus_kava_v_zernakh_main.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -69,7 +67,7 @@ def save_to_excel(data, filename='varus_kava_v_zernakh.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='varus_kava_v_zernakh.xlsx', limit=40):
+def fetch_and_save_data_api(filename='varus_kava_v_zernakh_main.xlsx', limit=40):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
@@ -87,20 +85,11 @@ def fetch_and_save_data_api(filename='varus_kava_v_zernakh.xlsx', limit=40):
             weight = extract_value(product.get('weight', ''), unit="г")
             price_with_discount = extract_value(product.get('sqpp_data_9', {}).get('special_price', ''))
 
-            # Перевірка наявності товару
-            # if not product.get('sqpp_data_9', {}).get('in_stock', False):
-            #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}")
-            #     continue
-            
+            # Перевірка наявності товару            
             if product.get('sqpp_data_9', {}).get('in_stock', 0) == 0:
                 print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}")
                 continue
             
-            # Фільтрація за ключовими словами
-            if not matches_filter(product_name):
-                print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
-                continue
-
             # Логування інформації про товар
             print(f"[ЛОГ] Назва: {product_name}, Ціна: {price}, Знижка: {discount}%, "
                   f"Ціна зі знижкою: {price_with_discount}, Вага: {weight}")

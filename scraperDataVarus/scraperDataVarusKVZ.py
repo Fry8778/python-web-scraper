@@ -14,7 +14,7 @@ def is_duplicate(product_name, weight, price):
 
 def matches_filter(product_name):
     """Перевірка, чи назва продукту відповідає фільтру."""
-    keywords = ["мелена", "мел."]
+    keywords = ["зернова", "в зернах"]
     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 def extract_value(value, unit=""):
@@ -35,7 +35,7 @@ def fetch_product_data_api(page=1, limit=40):
     headers = {
         "Accept": "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Referer": "https://varus.ua/kava-zernova~typ-kavy_melena?stock_shop=in_stock",
+        "Referer": "https://varus.ua/kava-zernova~typ-kavy_u-zernakh?stock_shop=in_stock",
     }
     params = {
         "request_format": "search-query",
@@ -58,7 +58,7 @@ def fetch_product_data_api(page=1, limit=40):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='varus_kava_melena.xlsx'):
+def save_to_excel(data, filename='varus_KVZ.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -69,7 +69,7 @@ def save_to_excel(data, filename='varus_kava_melena.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='varus_kava_melena.xlsx', limit=40):
+def fetch_and_save_data_api(filename='varus_KVZ.xlsx', limit=40):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
