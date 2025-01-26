@@ -31,23 +31,24 @@ def fetch_product_data_api(page=1, limit=40):
         "Accept": "*/*",
         "Accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,uk;q=0.6",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json; charset=utf-8",
+        # Додайте будь-які додаткові заголовки, якщо вони є в браузері (наприклад, Authorization)
     }
-    payload = [
-        {
-            "operationName": "GetProductsByCategory",
-            "variables": {
-                "getProductsByCategoryInput": {
-                    "categoryReference": "9830",
-                    "categoryId": "null",
-                    "clientId": "TAVRIA_UA",
-                    "storeReference": "449",
-                    "currentPage": page,
-                    "pageSize": limit,
-                    "filters": {},
-                    "googleAnalyticsSessionId": ""
-                }
-            },
+    payload = {
+        "operationName": "GetProductsByCategory",
+        "variables": {
+            "getProductsByCategoryInput": {
+                "categoryReference": "9829",
+                "categoryReference": "9830",
+                "categoryId": "null",
+                "clientId": "TAVRIA_UA",
+                "storeReference": "449",
+                "currentPage": page,
+                "pageSize": limit,
+                "filters": {},
+                "googleAnalyticsSessionId": ""
+            }
+        },
             "query": """fragment CategoryFields on CategoryModel {
   active
   boost
@@ -329,7 +330,7 @@ query GetProductsByCategory($getProductsByCategoryInput: GetProductsByCategoryIn
   }
 }"""
         }
-    ]
+    
     print(f"[ЛОГ] Тіло запиту: {payload}")
     print(f"[ЛОГ] Заголовки запиту: {headers}")
     try:
@@ -343,7 +344,7 @@ query GetProductsByCategory($getProductsByCategoryInput: GetProductsByCategoryIn
         if isinstance(data, list):
             return data
         elif isinstance(data, dict):
-            return data.get('data', [])
+            return data.get('data', {}).get('getProductsByCategory', {}).get('category', {}).get('products', [])
         else:
             print("[ЛОГ] Невідомий формат відповіді.")
             return []
@@ -351,7 +352,7 @@ query GetProductsByCategory($getProductsByCategoryInput: GetProductsByCategoryIn
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api.xlsx'):
+def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api1.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -365,7 +366,7 @@ def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api.xlsx', limit=40):
+def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api1.xlsx', limit=40):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
@@ -402,12 +403,10 @@ def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api.xlsx', limit=40
                     continue
 
                 # Додавання продукту до списку
-                product_list.append([
-                    product_name, 
-                    extract_value(price), 
-                    extract_value(price_with_discount), 
-                    f"{discount:.2f}%" if discount > 0 else '', 
-                ])
+                product_list.append([product_name, 
+                                     extract_value(price), 
+                                     extract_value(price_with_discount), 
+                                     f"{discount:.2f}%" if discount > 0 else ''])
             except Exception as e:
                 print(f"[ЛОГ] Помилка обробки продукту: {e}")
         
