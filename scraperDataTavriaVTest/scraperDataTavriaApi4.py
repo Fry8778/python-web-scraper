@@ -12,6 +12,11 @@ def is_duplicate(product_name, price):
     unique_products.add(product_key)
     return False
 
+# Перевірка чи назва продукту відповідає фільтру
+def matches_filter(product_name):
+    keywords = ["зерно", "зерн.", "ваг."]
+    return any(keyword.lower() in product_name.lower() for keyword in keywords)
+
 def extract_value(value, unit=""):
     """Перетворює числове значення у відформатований текст з одиницею."""
     try:
@@ -36,7 +41,7 @@ def fetch_product_data_api(page=1, limit=100):
         "operationName": "GetProductsByCategory",
         "variables": {
             "getProductsByCategoryInput": {
-                "categoryReference": "9830",  # Ваше значення категорії
+                "categoryReference": "9830",  # Значення категорії
                 "clientId": "TAVRIA_UA",
                 "storeReference": "449",
                 "currentPage": page,
@@ -73,7 +78,7 @@ def fetch_product_data_api(page=1, limit=100):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api2.xlsx'):
+def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api4.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -85,7 +90,7 @@ def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api2.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api2.xlsx', limit=100):
+def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api4.xlsx', limit=100):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []
@@ -101,36 +106,54 @@ def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api2.xlsx', limit=1
         for product in products:
             try:
                 product_name = product.get('name', '').strip()
-                price = extract_value(product.get('price'))
-               
-               # Обробка ціни зі знижкою
+                price = product.get('price')  # Зберігаємо у "сирому" вигляді
                 price_with_discount = None
                 promotion = product.get('promotion')
-                if promotion and 'conditions' in promotion and promotion['conditions']:
-                    price_with_discount = extract_value(promotion['conditions'][0].get('price', price))
-                else:
-                    price_with_discount = ''  # Якщо знижки немає
-                    
-                # Перевірка на наявність товару на складі
-                # if product.get('stock', 0) <= 0:
-                #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}, stock: {product.get('stock', 'N/A')}")
-                #     continue
 
+                # Обробка ціни зі знижкою
+                if promotion and 'conditions' in promotion and promotion['conditions']:
+                    price_with_discount = promotion['conditions'][0].get('price')
+                # Конвертація у відформатовані значення
+                formatted_price = extract_value(price)
+                formatted_price_with_discount = extract_value(price_with_discount)
+                
+                # Перевірка на наявність товару на складі
+                if product.get('stock', 0) <= 0:
+                    print(f"[ЛОГ] Пропущено (відсутній на складі): {product_name}, stock: {product.get('stock', 'N/A')}")
+                    continue
+                
+                 # Фільтрація за ключовими словами
+                if not matches_filter(product_name):
+                    print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
+                    continue
+                
                 # Перевірка на дублікати
-                if is_duplicate(product_name, price):
+                if is_duplicate(product_name, formatted_price):
                     print(f"[ЛОГ] Пропущено (дублікат): {product_name}")
                     continue
 
+                # Обчислення знижки
+                discount = ''
+                if price_with_discount and price:
+                    try:
+                        original_price = float(price)
+                        discounted_price = float(price_with_discount)
+                        if original_price > discounted_price:  # Перевірка валідності знижки
+                            discount = f"{((original_price - discounted_price) / original_price) * 100:.2f}%"
+                    except ValueError:
+                        discount = ''  # Якщо дані некоректні, знижка порожня
+
                 # Додавання продукту до списку
-                product_list.append([product_name,                                    
-                                    price if not price_with_discount else '',  # Якщо є знижка, це поле порожнє
-                                    price_with_discount,  # Ціна зі знижкою (або порожньо)
-                                    price if price_with_discount else '',  # Стара ціна    
-                                                                   
-                                     ])
+                product_list.append([
+                    product_name,
+                    formatted_price if not formatted_price_with_discount else '',  # Якщо є знижка, це поле порожнє
+                    formatted_price_with_discount,  # Ціна зі знижкою (або порожньо)
+                    formatted_price if formatted_price_with_discount else '',  # Стара ціна
+                    discount  # Відсоток знижки
+                ])
             except Exception as e:
                 print(f"[ЛОГ] Помилка обробки продукту: {e}")
-        
+
         if len(products) < limit:
             print("[ЛОГ] Завантажено останню сторінку.")
             break
@@ -139,6 +162,7 @@ def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api2.xlsx', limit=1
 
     print(f"[ЛОГ] Усього продуктів для запису: {len(product_list)}")
     save_to_excel(product_list, filename)
+
 
 # Виклик функції
 fetch_and_save_data_api(limit=100)
