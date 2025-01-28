@@ -14,7 +14,7 @@ def is_duplicate(product_name, price):
 
 # Перевірка чи назва продукту відповідає фільтру
 def matches_filter(product_name):
-    keywords = ["зерно", "зерн.", "ваг."]
+    keywords = ["дріп"]
     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 def extract_value(value, unit=""):
@@ -78,7 +78,7 @@ def fetch_product_data_api(page=1, limit=100):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api4.xlsx'):
+def save_to_excel(data, filename='tavriaV_kava_drip.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -90,7 +90,7 @@ def save_to_excel(data, filename='tavriaV_kava_v_zernakh_api4.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(filename='tavriaV_kava_v_zernakh_api4.xlsx', limit=100):
+def fetch_and_save_data_api(filename='tavriaV_kava_drip.xlsx', limit=100):
     """Основна функція для збору даних і збереження у файл."""
     page = 1
     product_list = []

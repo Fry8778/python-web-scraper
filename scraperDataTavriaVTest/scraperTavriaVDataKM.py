@@ -18,7 +18,7 @@ def is_duplicate(product_name):
 
 # Перевірка чи назва продукту відповідає фільтру
 def matches_filter(product_name):
-    keywords = ["зерно", "зерн.", "ваг."]
+    keywords = ["мелена", "мел."]
     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 # Функція для збору даних з поточної сторінки
@@ -145,7 +145,7 @@ with webdriver.Chrome(options=options) as driver:
         header = ['Назва товару', 'Ціна товару(грн)', 'Ціна товару з урахуванням знижки(грн)', 'Стара ціна товару(грн)', 'Знижка(грн)']
         quotes.sort(key=lambda x: x[0])
         df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('tavria_v_products_kava_v_zernakh.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'tavria_v_products_kava_v_zernakh.xlsx'")
+        df.to_excel('tavriaV_KM.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'tavriaV_KM.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")
