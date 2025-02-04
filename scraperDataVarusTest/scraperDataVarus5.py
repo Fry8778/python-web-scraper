@@ -26,12 +26,12 @@ def scrape_page(driver, quotes):
         for product_card in product_cards:
             try:
                 # Перевірка наявності товару
-                try:
-                    out_of_stock_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__out-of-stock--label")
-                    print(f"[ЛОГ] Пропущено (відсутній на складі): {product_card.find_element(By.CSS_SELECTOR, '.sf-product-card__title').text.strip()}")
-                    continue
-                except NoSuchElementException:
-                    pass
+                # try:
+                #     out_of_stock_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__out-of-stock--label")
+                #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_card.find_element(By.CSS_SELECTOR, '.sf-product-card__title').text.strip()}")
+                #     continue
+                # except NoSuchElementException:
+                #     pass
                 
                 # Назва продукту
                 product_name_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__title")
@@ -69,8 +69,12 @@ def scrape_page(driver, quotes):
                 # Знижка в процентах
                 discount_percentage = ""
                 try:
-                    discount_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__badge_text")
-                    discount_percentage = discount_element.text.strip().split()[0].replace("-", "").replace("%", "")
+                    discount_elements = product_card.find_elements(By.CSS_SELECTOR, ".sf-product-card__badge_text")
+                    for element in discount_elements:
+                        text = element.text.strip()
+                        if "%" in text:  # Фільтруємо лише ті, що містять відсотки
+                            discount_percentage = text.split()[0].replace("-", "").replace("%", "")
+                            break  # Беремо лише перше знайдене значення
                 except NoSuchElementException:
                     pass
                     
@@ -136,11 +140,22 @@ with webdriver.Chrome(options=options) as driver:
             print("[ЛОГ] Наступної сторінки не знайдено. Завершення.")
             break
 
+    # if quotes:
+    #     header = ['Назва товару', 'Ціна товару (грн)', 'Ціна товару з урахуванням знижки (грн)', 'Стара ціна товару(грн)', 'Відсоток знижки (%)']
+    #     quotes.sort(key=lambda x: x[0])
+    #     df = pd.DataFrame(quotes, columns=header)
+    #     df.to_excel('data_varus5.xlsx', index=False)
+    #     print("[ЛОГ] Дані збережено у 'data_varus5.xlsx'")
+    # else:
+    #     print("[ЛОГ] Дані не знайдено.")
+    
     if quotes:
-        header = ['Назва товару', 'Ціна товару (грн)', 'Ціна товару з урахуванням знижки (грн)', 'Стара ціна товару(грн)', 'Відсоток знижки (%)']
-        quotes.sort(key=lambda x: x[0])
-        df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('data_varus4.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'data_varus4.xlsx'")
+        df = pd.DataFrame(quotes, columns=[
+            'Назва товару', 'Ціна товару (грн)', 'Ціна товару з урахуванням знижки (грн)',
+            'Стара ціна товару(грн)', 'Відсоток знижки (%)'
+        ])
+        df.to_excel('data_varus6.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'data_varus6.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")
+
