@@ -14,7 +14,7 @@ def is_duplicate(product_name, price):
 
 # Перевірка чи назва продукту відповідає фільтру
 def matches_filter(product_name):
-    keywords = ["зерно", "зерн.", "ваг."]
+    keywords = ["зерно", "зерн.", "ваг.", "зерно ваг.", "зерн. ваг.", "в зернах ваг."]
     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 def extract_value(value, unit=""):

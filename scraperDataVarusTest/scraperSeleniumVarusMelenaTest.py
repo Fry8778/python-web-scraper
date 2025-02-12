@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
+import re
 
 # Перевірка на дублікати
 unique_products = set()
@@ -14,6 +15,20 @@ def is_duplicate(product_name):
         return True
     unique_products.add(product_name)
     return False
+
+# def matches_filter(product_name):
+#     # keywords = ["В ЗЕРНАХ", "ЗЕР", "ЗЕРНО", "ЗЕРНОВА"]
+#     keywords = ["МЕЛЕНА", "МЕЛ"]  
+#     # keywords = ["мелна", "мел"]  
+#     return any(keyword.lower() in product_name.lower() for keyword in keywords)
+
+
+def matches_filter(product_name):
+    keywords = ["МЕЛЕНА", "МЕЛ"]  
+    cleaned_name = re.sub(r"[^\w\s]", "", product_name)  # Видаляє все, крім літер та пробілів
+    return any(keyword.lower() in cleaned_name.lower() for keyword in keywords)
+
+
 
 # Функція для збору даних з поточної сторінки
 def scrape_page(driver, quotes):
@@ -33,14 +48,22 @@ def scrape_page(driver, quotes):
                 except NoSuchElementException:
                     pass
                 
+                # if "sf-product-card--out-of-stock-container" in product_card.get_attribute("class"):
+                #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_card.find_element(By.CSS_SELECTOR, '.sf-product-card__title').text.strip()}")
+                #     continue
+
                 # Назва продукту
                 product_name_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__title")
                 product_name = product_name_element.text.strip()
-
+                
                 if is_duplicate(product_name):
                     print(f"[ЛОГ] Дублікат пропущено: {product_name}")
                     continue
-
+                
+                if not matches_filter(product_name):
+                    print(f"[ЛОГ] Пропущено через невідповідність фільтру: {product_name}")
+                    continue
+                
                 # Ціна товару
                 special_price = ""
                 try:
@@ -69,8 +92,12 @@ def scrape_page(driver, quotes):
                 # Знижка в процентах
                 discount_percentage = ""
                 try:
-                    discount_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__badge_text")
-                    discount_percentage = discount_element.text.strip().split()[0].replace("-", "").replace("%", "")
+                    discount_elements = product_card.find_elements(By.CSS_SELECTOR, ".sf-product-card__badge_text")
+                    for element in discount_elements:
+                        text = element.text.strip()
+                        if "%" in text:  # Фільтруємо лише ті, що містять відсотки
+                            discount_percentage = text.split()[0].replace("-", "").replace("%", "")
+                            break  # Беремо лише перше знайдене значення
                 except NoSuchElementException:
                     pass
                     
@@ -98,7 +125,7 @@ def scrape_page(driver, quotes):
     return quotes
 
 # Основний код
-base_url = 'https://varus.ua/kava-zernova~typ-kavy_u-zernakh'
+base_url = 'https://varus.ua/kava-zernova~typ-kavy_melena'
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
@@ -137,10 +164,27 @@ with webdriver.Chrome(options=options) as driver:
             break
 
     if quotes:
-        header = ['Назва товару', 'Ціна товару (грн)', 'Ціна товару з урахуванням знижки (грн)', 'Стара ціна товару(грн)', 'Відсоток знижки (%)']
+        header = ['Назва товару',
+                  'Ціна товару (грн)',
+                  'Ціна товару з урахуванням знижки (грн)',
+                  'Стара ціна товару(грн)',
+                  'Відсоток знижки (%)']
         quotes.sort(key=lambda x: x[0])
         df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('data_varus4.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'data_varus4.xlsx'")
+        df.to_excel('scraper_selenium_Varus_melena_test.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'scraper_selenium_Varus_melena_test.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")
+    
+    # if quotes:
+    #     df = pd.DataFrame(quotes, columns=[ 'Назва товару',
+    #                                         'Ціна товару (грн)',
+    #                                         'Ціна товару з урахуванням знижки (грн)',
+    #                                         'Стара ціна товару(грн)',
+    #                                         'Відсоток знижки (%)'
+    #     ])
+    #     df.to_excel('scraper_selenium_Varus_melena_test.xlsx', index=False)
+    #     print("[ЛОГ] Дані збережено у 'scraper_selenium_Varus_melena_test.xlsx'")
+    # else:
+    #     print("[ЛОГ] Дані не знайдено.")
+

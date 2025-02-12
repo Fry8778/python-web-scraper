@@ -53,7 +53,7 @@ def fetch_product_data_api(category, offset=0, size=40):
         print(f"[ЛОГ] Помилка запиту до API: {e}")
         return []
 
-def save_to_excel(data, filename='varus_kava_melena_test.xlsx'):
+def save_to_excel(data, filename='scraper_api_Varus_kava_melena_test.xlsx'):
     """Функція для запису даних у Excel."""
     if not data:
         print("[ЛОГ] Немає даних для запису у файл.")
@@ -64,7 +64,7 @@ def save_to_excel(data, filename='varus_kava_melena_test.xlsx'):
     df.to_excel(filename, index=False, sheet_name='Products')
     print(f"Файл '{filename}' успішно створено!")
 
-def fetch_and_save_data_api(category, filename='varus_kava_melena_test.xlsx', size=40):
+def fetch_and_save_data_api(category, filename='scraper_api_Varus_kava_melena_test.xlsx', size=40):
     """Основна функція для збору даних і збереження у файл."""
     offset = 0
     product_list = []
