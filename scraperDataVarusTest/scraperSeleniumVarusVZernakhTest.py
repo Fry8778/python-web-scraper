@@ -16,6 +16,11 @@ def is_duplicate(product_name):
     unique_products.add(product_name)
     return False
 
+# def matches_filter(product_name):
+#     keywords = ["В ЗЕРНАХ", "ЗЕР", "ЗЕРНО", "ЗЕРНОВА"]
+#     return any(keyword.lower() in product_name.lower() for keyword in keywords)
+
+
 def matches_filter(product_name):
     keywords = ["В ЗЕРНАХ", "ЗЕР", "ЗЕРНО", "ЗЕРНОВА"]
     cleaned_name = re.sub(r"[^\w\s]", "", product_name)  # Видаляє все, крім літер та пробілів

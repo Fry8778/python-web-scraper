@@ -17,9 +17,7 @@ def is_duplicate(product_name):
     return False
 
 # def matches_filter(product_name):
-#     # keywords = ["В ЗЕРНАХ", "ЗЕР", "ЗЕРНО", "ЗЕРНОВА"]
-#     keywords = ["МЕЛЕНА", "МЕЛ"]  
-#     # keywords = ["мелна", "мел"]  
+#     keywords = ["МЕЛЕНА", "МЕЛ"]
 #     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 
