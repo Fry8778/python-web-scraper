@@ -122,6 +122,7 @@ def scrape_page(driver, quotes):
 
 # Основний код
 base_url = 'https://varus.ua/kava-zernova~typ-kavy_u-zernakh'
+# base_url = 'https://varus.ua/dnipro/kava-zernova~typ-kavy_u-zernakh'
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
