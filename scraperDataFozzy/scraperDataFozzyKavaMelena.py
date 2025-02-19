@@ -19,7 +19,14 @@ def is_duplicate(product_name):
 # Перевірка чи назва продукту відповідає фільтру
 def matches_filter(product_name):    
     keywords = ["МЕЛЕНА", "МЕЛ"]
-    return any(keyword.lower() in product_name.lower() for keyword in keywords)
+    exclude_keywords = ["ДРІП", "DRIP"]  # Додали ключові слова для виключення
+
+    # Перевірка, чи є ключові слова та відсутні слова для виключення
+    return (
+        any(keyword.lower() in product_name.lower() for keyword in keywords)
+        and not any(exclude.lower() in product_name.lower() for exclude in exclude_keywords)
+    )
+
 
 # Функція для збору даних з поточної сторінки
 def scrape_page(driver, quotes):
