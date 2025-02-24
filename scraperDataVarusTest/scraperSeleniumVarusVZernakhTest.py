@@ -37,8 +37,9 @@ def scrape_page(driver, quotes):
         for product_card in product_cards:
             try:
                 # Перевірка наявності товару
-                try:
-                    out_of_stock_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__out-of-stock--label")
+                try:                    
+                    out_of_stock_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card--out-of-stock-container")
+                    # out_of_stock_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__out-of-stock--label")
                     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_card.find_element(By.CSS_SELECTOR, '.sf-product-card__title').text.strip()}")
                     continue
                 except NoSuchElementException:
@@ -47,7 +48,7 @@ def scrape_page(driver, quotes):
                 # if "sf-product-card--out-of-stock-container" in product_card.get_attribute("class"):
                 #     print(f"[ЛОГ] Пропущено (відсутній на складі): {product_card.find_element(By.CSS_SELECTOR, '.sf-product-card__title').text.strip()}")
                 #     continue
-
+                            
                 # Назва продукту
                 product_name_element = product_card.find_element(By.CSS_SELECTOR, ".sf-product-card__title")
                 product_name = product_name_element.text.strip()
