@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from urllib.parse import urljoin
 import pandas as pd
 import time
 import re
@@ -124,15 +125,16 @@ def scrape_page(driver, quotes):
     return quotes
 
 # Основний код
-# base_url = 'https://varus.ua/kava-zernova~typ-kavy_melena'
-base_url = 'https://varus.ua/dnipro/kava-zernova~typ-kavy_melena'
+
+base_url = 'https://varus.ua'
+category_url = '/dnipro/kava-zernova~typ-kavy_melena'
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 
 with webdriver.Chrome(options=options) as driver:
-    driver.get(base_url)
+    driver.get(urljoin(base_url, category_url))
     quotes = []
     page_number = 1
 
@@ -141,27 +143,27 @@ with webdriver.Chrome(options=options) as driver:
         quotes = scrape_page(driver, quotes)
 
         try:
-            # Пошук посилання на наступну сторінку
-            next_page_link = None
-            pagination_links = driver.find_elements(By.CSS_SELECTOR, ".sf-pagination__item")
-            
-            for link in pagination_links:
-                if link.text.strip() == str(page_number + 1):
-                    next_page_link = link.get_attribute("href")
+            # Перевірка наявності активної кнопки "далі"
+            next_button = driver.find_elements(By.CSS_SELECTOR, ".sf-pagination__item--next:not(.sf-pagination__item--next--disable)")
+            if next_button:
+                next_page_link = next_button[0].find_element(By.TAG_NAME, 'a').get_attribute("href")
+                if next_page_link:
+                    next_page_link = urljoin(base_url, next_page_link)
+                    print(f"[ЛОГ] Переходжу до сторінки {page_number + 1}: {next_page_link}")
+                    driver.get(next_page_link)
+                    time.sleep(3)
+                    page_number += 1
+                else:
+                    print("[ЛОГ] Посилання на наступну сторінку відсутнє. Завершення.")
                     break
-
-            if not next_page_link:
+            else:
                 print("[ЛОГ] Наступної сторінки немає. Завершення.")
                 break
-
-            print(f"[ЛОГ] Переходжу до сторінки {page_number + 1}: {next_page_link}")
-            driver.get(next_page_link)
-            time.sleep(3)  # Коротка пауза для завантаження сторінки
-            page_number += 1
 
         except NoSuchElementException:
             print("[ЛОГ] Наступної сторінки не знайдено. Завершення.")
             break
+
 
     if quotes:
         header = ['Назва товару',
@@ -171,8 +173,8 @@ with webdriver.Chrome(options=options) as driver:
                   'Відсоток знижки (%)']
         quotes.sort(key=lambda x: x[0])
         df = pd.DataFrame(quotes, columns=header)
-        df.to_excel('scraper_selenium_Varus_melena_test.xlsx', index=False)
-        print("[ЛОГ] Дані збережено у 'scraper_selenium_Varus_melena_test.xlsx'")
+        df.to_excel('scraper_selenium_Varus_melena_test2.xlsx', index=False)
+        print("[ЛОГ] Дані збережено у 'scraper_selenium_Varus_melena_test2.xlsx'")
     else:
         print("[ЛОГ] Дані не знайдено.")
     
@@ -187,4 +189,3 @@ with webdriver.Chrome(options=options) as driver:
     #     print("[ЛОГ] Дані збережено у 'scraper_selenium_Varus_melena_test.xlsx'")
     # else:
     #     print("[ЛОГ] Дані не знайдено.")
-
