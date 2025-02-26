@@ -32,7 +32,7 @@ def matches_filter(product_name):
 # Функція для збору даних з поточної сторінки
 def scrape_page(driver, quotes):
     try:
-        WebDriverWait(driver, 10).until(
+        WebDriverWait(driver, 15).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".sf-product-card__wrapper"))
         )
         product_cards = driver.find_elements(By.CSS_SELECTOR, ".sf-product-card__wrapper")
@@ -129,6 +129,7 @@ def scrape_page(driver, quotes):
 base_url = 'https://varus.ua'
 category_url = '/dnipro/kava-zernova~typ-kavy_melena'
 options = webdriver.ChromeOptions()
+options.add_argument('--enable-unsafe-swiftshader')
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
