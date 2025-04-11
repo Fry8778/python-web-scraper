@@ -18,7 +18,12 @@ def is_duplicate(product_name):
 
 # Перевірка чи назва продукту відповідає фільтру
 def matches_filter(product_name):    
-    keywords = ["В ЗЕРНАХ", "ЗЕР", "ЗЕРНО", "ЗЕРНОВА"]
+    keywords = ["ЗЕР",
+                "ЗЕРНО",
+                "ЗЕРНОВА"
+                "В ЗЕРНАХ",
+                "КАВА ЗЕРНО",
+                "КАВА В ЗЕРНАХ"]
     return any(keyword.lower() in product_name.lower() for keyword in keywords)
 
 # Функція для збору даних з поточної сторінки
